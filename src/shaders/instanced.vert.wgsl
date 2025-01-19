@@ -19,8 +19,8 @@ fn main(
   @location(2) uv : vec2f
 ) -> VertexOutput {
   var output : VertexOutput;
-  output.Position =  uniforms.viewProjectionMatrix * uniforms.modelMatrices[instanceIdx] * position;
-  output.normal = normal.xyz;
+  output.Position = uniforms.viewProjectionMatrix * uniforms.modelMatrices[instanceIdx] * position;
+  output.normal = (uniforms.modelMatrices[instanceIdx] * vec4f(normal.xyz, 0)).xyz;
   output.fragUV = uv;
   return output;
 }

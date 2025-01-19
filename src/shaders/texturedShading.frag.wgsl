@@ -10,7 +10,8 @@ fn main(
   @location(1) fragUV: vec2f,
 ) -> @location(0) vec4f {
   // Calculate the diffuse lighting based on the dot product of light direction and normal
-  let diffuse = max(dot(normal, lightDirection), 0.0);
+
+  let diffuse = max(dot(normalize(normal), lightDirection), 0.1);
 
   return textureSample(myTexture, mySampler, fragUV) * diffuse;
 }

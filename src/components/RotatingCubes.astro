@@ -21,7 +21,7 @@
   } from "../lib/cube";
 
   import instancedVertWGSL from "../shaders/instanced.vert.wgsl?raw";
-  import vertexPositionColorWGSL from "../shaders/vertexPositionColor.frag.wgsl?raw";
+  import texturedShadingWGSL from "../shaders/texturedShading.frag.wgsl?raw";
 
   import texture from "../assets/cracks.png";
 
@@ -79,7 +79,7 @@
     },
     fragment: {
       module: device.createShaderModule({
-        code: vertexPositionColorWGSL,
+        code: texturedShadingWGSL,
       }),
       targets: [
         {
@@ -221,16 +221,20 @@
       i = 0;
     for (let x = 0; x < xCount; x++) {
       for (let y = 0; y < yCount; y++) {
-        mat4.rotate(
-          modelMatrices[i],
-          vec3.fromValues(
-            Math.sin((x + 0.5) * now),
-            Math.cos((y + 0.5) * now),
-            0,
-          ),
-          1,
-          tmpMat4,
-        );
+        if (x === 1) {
+          mat4.rotate(
+            modelMatrices[i],
+            vec3.fromValues(
+              Math.sin((x + 0.5) * now),
+              Math.cos((y + 0.5) * now),
+              0,
+            ),
+            1,
+            tmpMat4,
+          );
+        } else {
+          tmpMat4.set(modelMatrices[i]);
+        }
 
         modelMatrixArray.set(tmpMat4, m);
 
@@ -243,7 +247,7 @@
   function frame() {
     updateModelMatrices();
 
-    vec4.transformMat4(camera, mat4.rotationY(0.01), camera);
+    vec4.transformMat4(camera, mat4.rotationY(0.001), camera);
     mat4.lookAt(camera, vec3.create(0, 0, 0), vec3.create(0, 1, 0), viewMatrix);
     mat4.multiply(projectionMatrix, viewMatrix, viewProjectionMatrix);
 
@@ -259,7 +263,7 @@
       colorAttachments: [
         {
           view: context.getCurrentTexture().createView(),
-          clearValue: [0.5, 0.5, 0.5, 1.0],
+          clearValue: [0.0, 0.0, 0.0, 1.0],
           loadOp: "clear",
           storeOp: "store",
         },
