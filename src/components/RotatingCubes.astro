@@ -22,13 +22,13 @@
   import instancedVertWGSL from "../shaders/instanced.vert.wgsl?raw";
   import vertexPositionColorWGSL from "../shaders/vertexPositionColor.frag.wgsl?raw";
 
+  import texture from "../assets/cracks.png";
+
   // Set up WebGPU render context.
   const canvas: HTMLCanvasElement = document.querySelector("#instanced-cubes")!;
-  const adapter = await navigator.gpu.requestAdapter({
-    featureLevel: "compatibility",
-  });
+  const adapter = await navigator.gpu.requestAdapter();
   const device = await adapter?.requestDevice()!;
-  const context: GPUCanvasContext = canvas.getContext("webgpu")!;
+  const context = canvas.getContext("webgpu")!;
   const devicePixelRatio = window.devicePixelRatio;
   canvas.width = canvas.clientWidth * devicePixelRatio;
   canvas.height = canvas.clientHeight * devicePixelRatio;
@@ -104,6 +104,27 @@
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
+  // Fetch the image and upload it into a GPUTexture.
+  let cubeTexture: GPUTexture;
+  {
+    const response = await fetch(texture.src);
+    const imageBitmap = await createImageBitmap(await response.blob());
+
+    cubeTexture = device.createTexture({
+      size: [imageBitmap.width, imageBitmap.height, 1],
+      format: "rgba8unorm",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    device.queue.copyExternalImageToTexture(
+      { source: imageBitmap },
+      { texture: cubeTexture },
+      [imageBitmap.width, imageBitmap.height],
+    );
+  }
+
   const xCount = 4;
   const yCount = 4;
   const numInstances = xCount * yCount;
@@ -117,6 +138,12 @@
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  // Create a sampler with linear filtering for smooth interpolation.
+  const sampler = device.createSampler({
+    magFilter: "linear",
+    minFilter: "linear",
+  });
+
   const uniformBindGroup = device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
@@ -125,6 +152,14 @@
         resource: {
           buffer: uniformBuffer,
         },
+      },
+      {
+        binding: 1,
+        resource: sampler,
+      },
+      {
+        binding: 2,
+        resource: cubeTexture.createView(),
       },
     ],
   });
