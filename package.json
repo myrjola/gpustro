@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "astro": "^5.1.7",
+    "missing.css": "^1.1.3",
     "wgpu-matrix": "^3.3.0"
   },
   "devDependencies": {
