@@ -163,9 +163,8 @@
     1,
     100.0,
   );
-  const viewMatrix = mat4.translation(vec3.fromValues(0, 0, -12));
-
-  mat4.multiply(projectionMatrix, viewMatrix, viewProjectionMatrix);
+  const camera = vec4.create(0, 0, 10, 1);
+  const viewMatrix = mat4.create();
 
   // Create a sampler with linear filtering for smooth interpolation.
   const sampler = device.createSampler({
@@ -243,6 +242,11 @@
 
   function frame() {
     updateModelMatrices();
+
+    vec4.transformMat4(camera, mat4.rotationY(0.01), camera);
+    mat4.lookAt(camera, vec3.create(0, 0, 0), vec3.create(0, 1, 0), viewMatrix);
+    mat4.multiply(projectionMatrix, viewMatrix, viewProjectionMatrix);
+
     device.queue.writeBuffer(
       uniformBuffer,
       0,
